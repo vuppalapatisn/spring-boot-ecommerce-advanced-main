@@ -19,6 +19,7 @@ jobs:
           - catalog-service
           - order-service
           - payment-service
+          - eureka-server
           
 
     steps:
