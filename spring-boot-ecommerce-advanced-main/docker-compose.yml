@@ -1,0 +1,58 @@
+
+version: '3.9'
+services:
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    networks: [ ecom-net ]
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    networks: [ ecom-net ]
+
+  catalog-service:
+    build: ./catalog-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+    networks: [ ecom-net ]
+    depends_on:
+      - eureka-server
+
+  payment-service:
+    build: ./payment-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks: [ ecom-net ]
+    depends_on:
+      - eureka-server
+      - rabbitmq
+
+  order-service:
+    build: ./order-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks: [ ecom-net ]
+    depends_on:
+      - eureka-server
+      - payment-service
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks: [ ecom-net ]
+
+networks:
+  ecom-net:
+    driver: bridge
