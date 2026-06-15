@@ -21,22 +21,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Build JAR
+      # ✅ Build entire project (important for multi-module)
+      - name: Build project
         run: mvn clean install -DskipTests
 
+      # ✅ Upload JAR as downloadable artifact
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: |
+            spring-boot-ecommerce-advanced-main/${{ matrix.service }}/target/*.jar
+
+      # ✅ Login to Docker Hub
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Image
+      # ✅ Build image
+      - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }} ./spring-boot-ecommerce-advanced-main/${{ matrix.service }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:latest \
+          ./spring-boot-ecommerce-advanced-main/${{ matrix.service }}
 
-      - name: Push Image
+      # ✅ Push image
+      - name: Push Docker Image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:latest
+``
